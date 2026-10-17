@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reklam Hesaplayıcı Kılavuzu</title>
+<meta name="description" content="Claude'a kendi reklam hesaplayıcını yaptır: satış başına reklama ne kadar ayırabileceğini hesapla. Kopyala-yapıştır promptlarla A'dan Z'ye kılavuz.">
+<meta name="theme-color" content="#faf9f5">
+<style>
+:root{
+  --bg:#faf9f5; --card:#ffffff; --ink:#1f1e1a; --muted:#6b6759; --line:#e5e2d9;
+  --accent:#c6613f; --accent-ink:#ffffff; --soft:#f4ece6; --code:#f3f1ea; --ok:#2f7d4f; --warn:#b3261e;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1a17; --card:#26241f; --ink:#f1efe8; --muted:#a9a596; --line:#3a372f;
+    --accent:#e07a57; --accent-ink:#1b1a17; --soft:#33291f; --code:#1f1d19; --ok:#6cc58d; --warn:#ff8a80;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1a17; --card:#26241f; --ink:#f1efe8; --muted:#a9a596; --line:#3a372f;
+  --accent:#e07a57; --accent-ink:#1b1a17; --soft:#33291f; --code:#1f1d19; --ok:#6cc58d; --warn:#ff8a80;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 80px}
+header{padding:44px 0 8px}
+.kicker{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:clamp(30px,7vw,44px);line-height:1.15;margin:10px 0 14px}
+.lead{font-size:19px;color:var(--ink);margin:0 0 6px}
+.sub{color:var(--muted);margin:0}
+nav{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin:22px -16px 0;padding:10px 16px;overflow-x:auto;white-space:nowrap}
+nav a{display:inline-block;font-size:14px;color:var(--muted);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;margin-right:6px;background:var(--card)}
+nav a:hover{color:var(--ink);border-color:var(--accent)}
+section{padding-top:38px}
+h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;font-size:clamp(24px,5.5vw,30px);line-height:1.25;margin:0 0 12px}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:700 16px/1 -apple-system,"Segoe UI",sans-serif;margin-right:10px;vertical-align:3px}
+p{margin:0 0 14px}
+ul,ol{padding-left:22px;margin:0 0 14px}
+li{margin:4px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card);margin:0 0 14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--soft)}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.formula{background:var(--soft);border-radius:14px;padding:16px;margin:0 0 14px;font-size:16px}
+.formula b{color:var(--accent)}
+.prompt{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin:0 0 14px}
+.prompt .bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 10px 16px;background:var(--soft);border-bottom:1px solid var(--line)}
+.prompt .bar span{font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+button.copy{appearance:none;border:0;cursor:pointer;background:var(--accent);color:var(--accent-ink);font:700 15px/1 -apple-system,"Segoe UI",sans-serif;padding:11px 18px;border-radius:10px;min-height:44px}
+button.copy:active{transform:scale(.97)}
+button.copy.done{background:var(--ok);color:#fff}
+.prompt pre{margin:0;padding:16px;white-space:pre-wrap;word-wrap:break-word;font:14.5px/1.6 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;background:var(--code);color:var(--ink);max-height:460px;overflow:auto}
+.note{border-left:4px solid var(--accent);background:var(--soft);padding:12px 16px;border-radius:0 12px 12px 0;margin:0 0 14px}
+.bad li{margin:8px 0}
+.check{list-style:none;padding:0}
+.check li{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin:8px 0}
+.check input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--accent);flex:none}
+.check li.on span{color:var(--muted);text-decoration:line-through}
+.hint{color:var(--muted);font-size:15px}
+.sandbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.grid input{width:100%;font:600 17px/1.2 -apple-system,"Segoe UI",sans-serif;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.result{margin-top:16px;padding:18px;border-radius:14px;background:var(--soft)}
+.result .big{font:700 40px/1.1 Georgia,serif;color:var(--accent);font-variant-numeric:tabular-nums}
+.result.bad .big{color:var(--warn)}
+.result p{margin:6px 0 0;font-size:15px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+@media (max-width:520px){.grid{grid-template-columns:1fr}body{font-size:16.5px}}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="kicker">Ücretsiz kılavuz</span>
+  <h1>Reklam Hesaplayıcı Kılavuzu: A'dan Z'ye</h1>
+  <p class="lead">Satarken reklama en fazla ne kadar ayırabileceğini gösteren hesaplayıcını Claude'a 10 dakikada yaptır.</p>
+  <p class="sub">Her prompt kopyala-yapıştır hazır. Sırayla ilerle.</p>
+</header>
+
+<nav aria-label="Adımlar">
+  <a href="#ozet">Özet</a><a href="#adim1">1 · Rakamlar</a><a href="#adim2">2 · Formül</a><a href="#adim3">3 · Ana prompt</a><a href="#adim4">4 · Eksik gider</a><a href="#adim5">5 · Senaryo</a><a href="#adim6">6 · ROAS</a><a href="#adim7">7 · Çoklu ürün</a><a href="#hatalar">Hatalar</a>
+</nav>
+
+<section id="ozet">
+  <h2>Bu kılavuz ne işe yarar</h2>
+  <p>Hesaplayıcı, net satış tutarından reklam dışındaki bütün giderleri ve istediğin kârı çıkarır. Geriye kalan rakam, satış başına reklama ayırabileceğin paydır.</p>
+  <ul>
+    <li>Reklama körlemesine para yakmazsın, her ürünün sınırını önceden bilirsin.</li>
+    <li>Kargo, komisyon ya da iade artınca payın nasıl değiştiğini anında görürsün.</li>
+    <li>Hesabın doğru çıkması için gideri eksiksiz girmen gerekir. Kılavuz bunu da kontrol ettirir.</li>
+  </ul>
+</section>
+
+<section id="adim1">
+  <h2><span class="n">1</span>Önce rakamlarını topla</h2>
+  <p>Tek bir ürün için şu rakamları not et. Bilmediğin kalem varsa tahmin yazma, faturandan ya da panelinden bak.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Kalem</th><th>Ne demek</th><th>Nereden bakarsın</th></tr></thead>
+    <tbody>
+      <tr><td><b>Net satış tutarı</b></td><td>KDV ve indirimler düşüldükten sonra müşteriden sana kalan tutar</td><td>Sipariş detayı</td></tr>
+      <tr><td><b>Ürün maliyeti</b></td><td>Ürünün sana mal olduğu fiyat (KDV hariç)</td><td>Tedarikçi faturası</td></tr>
+      <tr><td><b>Kargo</b></td><td>Müşteriye gönderirken ödediğin ücret</td><td>Kargo faturası</td></tr>
+      <tr><td><b>Komisyon</b></td><td>Pazaryeri komisyonu ve ödeme (kart) kesintisi</td><td>Satıcı paneli</td></tr>
+      <tr><td><b>Ambalaj</b></td><td>Kutu, bant, koruyucu, etiket</td><td>Son alışverişin</td></tr>
+      <tr><td><b>İade payı</b></td><td>İade ve değişimin satış başına ortalama maliyeti</td><td>Son 30 günün iade sayısı × iade masrafı ÷ satış sayısı</td></tr>
+      <tr><td><b>Diğer</b></td><td>Hizmet bedeli, fotoğraf, personel payı gibi sabit kalemler</td><td>Aylık gider ÷ aylık satış</td></tr>
+      <tr><td><b>İstediğin kâr</b></td><td>Satış başına cebine kalmasını istediğin tutar (TL ya da yüzde)</td><td>Sen karar verirsin</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="adim2">
+  <h2><span class="n">2</span>Formülü ve örneği anla</h2>
+  <p>Satış başına reklama kalan pay, net satıştan diğer her şeyi çıkardıktan sonra elde kalan tutardır.</p>
+  <div class="formula"><b>Reklama kalan pay</b> = Net satış − (Ürün + Kargo + Komisyon + Ambalaj + İade payı + Diğer) − İstediğim kâr</div>
+  <p>Örnek: 1.000 TL net satış, 450 TL ürün, 60 TL kargo, 150 TL komisyon, 150 TL hedef kâr.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Durum</th><th class="num">Giderler toplamı</th><th class="num">Reklama kalan pay</th><th class="num">Hedef ROAS</th></tr></thead>
+    <tbody>
+      <tr><td>Kargo 60 TL</td><td class="num">660 TL</td><td class="num"><b>190 TL</b></td><td class="num">5,26</td></tr>
+      <tr><td>Kargo 120 TL</td><td class="num">720 TL</td><td class="num"><b>130 TL</b></td><td class="num">7,69</td></tr>
+    </tbody>
+  </table></div>
+  <p>Kargo 60 TL'den 120 TL'ye çıkınca reklama kalan pay 60 TL azalır (190 TL'den 130 TL'ye). Hedef ROAS = net satış ÷ reklama kalan pay.</p>
+
+  <div class="sandbox" aria-labelledby="deneme-b">
+    <h3 id="deneme-b" style="margin:0 0 4px;font-size:18px">Hızlı deneme</h3>
+    <p class="hint" style="margin:0 0 12px">Claude'a yaptırmadan önce rakamlarla oyna. Değerleri değiştir, sonuç anında güncellenir.</p>
+    <div class="grid">
+      <div><label for="f-net">Net satış</label><input id="f-net" type="number" inputmode="decimal" value="1000"></div>
+      <div><label for="f-urun">Ürün maliyeti</label><input id="f-urun" type="number" inputmode="decimal" value="450"></div>
+      <div><label for="f-kargo">Kargo</label><input id="f-kargo" type="number" inputmode="decimal" value="60"></div>
+      <div><label for="f-kom">Komisyon</label><input id="f-kom" type="number" inputmode="decimal" value="150"></div>
+      <div><label for="f-amb">Ambalaj</label><input id="f-amb" type="number" inputmode="decimal" value="0"></div>
+      <div><label for="f-iade">İade payı</label><input id="f-iade" type="number" inputmode="decimal" value="0"></div>
+      <div><label for="f-diger">Diğer</label><input id="f-diger" type="number" inputmode="decimal" value="0"></div>
+      <div><label for="f-kar">İstediğim kâr</label><input id="f-kar" type="number" inputmode="decimal" value="150"></div>
+    </div>
+    <div class="result" id="sonuc" aria-live="polite"></div>
+  </div>
+</section>
+
+<section id="adim3">
+  <h2><span class="n">3</span>Claude'a hesaplayıcıyı yaptır</h2>
+  <p>Claude'u aç, aşağıdaki promptu olduğu gibi yapıştır ve gönder. Claude sana çalışan, etkileşimli bir hesaplayıcı (artifact) üretir.</p>
+  <div class="prompt"><div class="bar"><span>Ana prompt</span><button class="copy" type="button">Kopyala</button></div><pre>Bana tek sayfalık, telefonda da rahat kullanılan, etkileşimli bir reklam payı hesaplayıcısı yap. Türkçe olsun, para birimi TL.
+
+Girişler (hepsi sayı kutusu olsun, değiştikçe sonuç anında güncellensin):
+- Net satış tutarı (KDV ve indirimler düşüldükten sonra müşteriden bana kalan tutar)
+- Ürün maliyeti
+- Kargo gideri
+- Pazaryeri ve ödeme komisyonu (TL ya da yüzde seçilebilsin)
+- Ambalaj ve paketleme
+- İade ve değişim payı (satış başına ortalama TL)
+- Diğer giderler
+- İstediğim kâr (TL ya da yüzde seçilebilsin)
+
+Hesap:
+Reklama kalan pay = Net satış - reklam dışındaki tüm giderler - istediğim kâr
+
+Sonuç bölümü:
+1. Satış başına reklama kalan pay (büyük rakam)
+2. Hedef ROAS = Net satış / reklama kalan pay
+3. Başa baş reklam payı (kâr hedefi sıfır olsaydı reklama kalacak tutar)
+4. Yatay çubuk: satışın ne kadarı ürüne, kargoya, komisyona, diğer giderlere, kâra ve reklama gidiyor
+
+Kurallar:
+- Reklama kalan pay sıfırın altına düşerse sonucu kırmızı yap ve "Bu fiyatla reklam veremezsin" uyarısı göster.
+- Herhangi bir gider kutusu boşsa "Eksik gider olabilir, sonuç yanıltıcı olur" uyarısı göster.
+- Başlangıç değerleri: net satış 1000, ürün 450, kargo 60, komisyon 150, ambalaj 0, iade 0, diğer 0, kâr 150.
+- Tasarım sade ve açık renkli olsun, rakamlar büyük ve okunur olsun.</pre></div>
+  <div class="note">Başlangıç değerleriyle sonuç <b>190 TL</b> çıkmalı. Çıkmazsa Claude'a şunu yaz: "Sonuç 190 TL çıkmalı, formülü kontrol et."</div>
+</section>
+
+<section id="adim4">
+  <h2><span class="n">4</span>Eksik gider var mı diye kontrol ettir</h2>
+  <p>Hesaplayıcı sadece girdiğin giderleri bilir. Unuttuğun bir kalem, reklam payını olduğundan büyük gösterir. Rakamlarını girmeden önce bu promptu çalıştır.</p>
+  <div class="prompt"><div class="bar"><span>Eksik gider kontrolü</span><button class="copy" type="button">Kopyala</button></div><pre>Ben [ÜRÜNÜN TÜRÜ, örn: telefon aksesuarı] satan bir e-ticaret satıcısıyım. [PLATFORM, örn: Trendyol / kendi sitem] üzerinden satıyorum.
+
+Satış başına şu giderleri hesaba katıyorum: [GENEL LİSTEN, örn: ürün maliyeti, kargo, komisyon].
+
+Bu listeyi bir e-ticaret muhasebecisi gibi incele. Unutmuş olabileceğim, satış başına etki eden gider kalemlerini sırala (örneğin iade, değişim, hasarlı ürün, ödeme kesintisi, ambalaj, KDV farkı, stopaj, depolama, fotoğraf, personel).
+
+Her kalem için şunları yaz:
+1. Neden gider sayılır
+2. Satış başına nasıl hesaplanır (kısa formül)
+3. Benim işimde ne kadar önemli olabilir (düşük / orta / yüksek)
+
+Bilmediğin ya da benim işime göre değişen noktalarda tahmin yazma, bana soru sor.</pre></div>
+  <p>Claude'un çıkardığı her kalem için rakamını bul ve hesaplayıcıya gir. Rakamını bilmediğin kalem geçersiz sayılır; önce öğren, sonra hesapla.</p>
+</section>
+
+<section id="adim5">
+  <h2><span class="n">5</span>Senaryo testi yap</h2>
+  <p>Giderler değişince reklama kalan pay nasıl etkilenir? Hesaplayıcının olduğu sohbette bu promptu gönder.</p>
+  <div class="prompt"><div class="bar"><span>Senaryo testi</span><button class="copy" type="button">Kopyala</button></div><pre>Hesaplayıcıdaki mevcut rakamları temel al ve şu senaryoları tek tabloda karşılaştır:
+1. Kargo %20 artarsa
+2. Kargo %50 artarsa
+3. Komisyon 5 puan artarsa
+4. İade oranı %5 olursa
+5. Ürün maliyeti %10 artarsa
+6. Satış fiyatı %10 düşürülse (kampanya)
+
+Tablonun sütunları: Senaryo | Reklama kalan pay (TL) | Değişim (TL) | Hedef ROAS.
+
+Sonra tek cümleyle yaz: hangi gider reklam payımı en çok küçülttü ve neye dikkat etmeliyim?</pre></div>
+  <p>Sonucu bir kez oku: hangi kalem payını en çok eritiyorsa onu önce düzeltmeye çalış (daha ucuz kargo, farklı paket, fiyat güncellemesi).</p>
+</section>
+
+<section id="adim6">
+  <h2><span class="n">6</span>Hedef ROAS ve günlük bütçeyi çıkar</h2>
+  <p>Reklama kalan pay, bir satış için ödeyebileceğin en yüksek reklam maliyetidir. Bunu reklam panelindeki rakamlarla karşılaştırmak için şu promptu kullan.</p>
+  <div class="prompt"><div class="bar"><span>ROAS ve bütçe</span><button class="copy" type="button">Kopyala</button></div><pre>Hesaplayıcıdaki sonuçlara göre şunları hesapla:
+
+- Satış başına en fazla ödeyebileceğim reklam maliyeti (CPA)
+- Hedef ROAS (net satış / reklam harcaması)
+- Günde [HEDEF SATIŞ SAYISI] satış için önerilen en yüksek günlük reklam bütçesi
+- Reklam panelimde satış başına maliyet [PANEL CPA, TL] görünüyorsa bu ürünün bu reklamla satılması kârlı mı, zarara mı sokuyor?
+
+Cevabı kısa bir tablo olarak ver, altına tek cümlelik karar yaz: reklam açılır / fiyat ya da gider düzeltilir / reklam durdurulur.</pre></div>
+  <p>Panel maliyetin hesaplanan paydan yüksekse reklam o üründe zarar yazıyor demektir. Reklam bütçesini artırmadan önce fiyatı, kargoyu ya da ürünü düzelt.</p>
+</section>
+
+<section id="adim7">
+  <h2><span class="n">7</span>Birden fazla ürünü tek tabloda gör</h2>
+  <p>Ürün sayın çoksa hesaplayıcıyı her ürün için elle doldurma. Ürünlerini yapıştır, Claude hepsini sıralasın.</p>
+  <div class="prompt"><div class="bar"><span>Çoklu ürün tablosu</span><button class="copy" type="button">Kopyala</button></div><pre>Aşağıdaki ürünler için hesaplayıcıdaki aynı formülü kullan ve reklama kalan payı hesapla.
+
+Ürün | Net satış | Ürün maliyeti | Kargo | Komisyon | Ambalaj | İade payı | İstediğim kâr
+[ÜRÜN 1] | [..] | [..] | [..] | [..] | [..] | [..] | [..]
+[ÜRÜN 2] | [..] | [..] | [..] | [..] | [..] | [..] | [..]
+[ÜRÜN 3] | [..] | [..] | [..] | [..] | [..] | [..] | [..]
+
+Sonucu şu sütunlarla tablo yap: Ürün | Reklama kalan pay | Hedef ROAS | Durum.
+
+Durum sütununa şunu yaz:
+- "Reklam verilebilir" (pay 100 TL ve üzeri)
+- "Sınırda" (pay 0 ile 100 TL arası)
+- "Reklam verme" (pay sıfırın altında)
+
+Tabloyu reklama kalan paya göre büyükten küçüğe sırala. Eksik rakam görürsen hesaplamadan önce bana sor.</pre></div>
+  <p class="hint">Buradaki 100 TL eşiği örnek. Kendi işine göre değiştirebilirsin.</p>
+</section>
+
+<section id="hatalar">
+  <h2>En sık yapılan 6 hata</h2>
+  <ol class="bad">
+    <li><b>Net satış yerine liste fiyatını yazmak.</b> KDV ve indirimler düşülmeden hesap şişer.</li>
+    <li><b>Eksik gider girmek.</b> En çok unutulanlar iade, ambalaj ve ödeme kesintisidir.</li>
+    <li><b>Kargoyu müşteriden tahsil ettiğini düşünüp gider yazmamak,</b> sonra ücretsiz kargo kampanyası açmak.</li>
+    <li><b>Kâr hedefini sıfır bırakmak.</b> O zaman "reklama kalan pay" başa baş noktası olur, kâr değil.</li>
+    <li><b>Kampanya fiyatıyla normal fiyatın giderlerini karıştırmak.</b> Fiyat düşerse yüzdelik komisyon düşer ama sabit kargo aynı kalır.</li>
+    <li><b>Hesabı bir kez yapıp bırakmak.</b> Kargo ve komisyon değiştiği an hesaplayıcıyı güncelle.</li>
+  </ol>
+
+  <h2 style="margin-top:30px">Son kontrol listesi</h2>
+  <ul class="check" id="liste">
+    <li><input type="checkbox" id="c1"><span>Net satış, KDV ve indirimler düşülmüş rakam</span></li>
+    <li><input type="checkbox" id="c2"><span>Ürün, kargo, komisyon, ambalaj, iade ve diğer kalemlerin hepsi dolu</span></li>
+    <li><input type="checkbox" id="c3"><span>Başlangıç değerleriyle sonuç 190 TL çıkıyor</span></li>
+    <li><input type="checkbox" id="c4"><span>Eksik gider kontrol promptu çalıştırıldı</span></li>
+    <li><input type="checkbox" id="c5"><span>Senaryo testi yapıldı, payı en çok eriten kalem belli</span></li>
+    <li><input type="checkbox" id="c6"><span>Reklam panelindeki satış başına maliyet, hesaplanan paydan düşük</span></li>
+  </ul>
+</section>
+
+<footer>
+  <p>Bu kılavuzdaki rakamlar örnektir. Kendi giderlerini ve vergi durumunu muhasebecinle doğrula. Yatırım ya da mali tavsiye değildir.</p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  // copy buttons
+  document.querySelectorAll('.prompt').forEach(function(box){
+    var btn = box.querySelector('button.copy'), pre = box.querySelector('pre');
+    btn.addEventListener('click', function(){
+      var text = pre.textContent;
+      function ok(){ btn.textContent = 'Kopyalandı'; btn.classList.add('done'); setTimeout(function(){ btn.textContent = 'Kopyala'; btn.classList.remove('done'); }, 1800); }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(ok, fallback);
+      } else { fallback(); }
+      function fallback(){
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        try { document.execCommand('copy'); ok(); } catch(e) { btn.textContent = 'Elle seç ve kopyala'; }
+      }
+    });
+  });
+
+  // quick calculator
+  var ids = ['net','urun','kargo','kom','amb','iade','diger','kar'];
+  var el = {}; ids.forEach(function(k){ el[k] = document.getElementById('f-' + k); });
+  var out = document.getElementById('sonuc');
+  var fmt = new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 2});
+  function val(k){ var v = parseFloat(el[k].value); return isNaN(v) ? 0 : v; }
+  function calc(){
+    var empty = ['net','urun','kargo','kom'].filter(function(k){ return el[k].value.trim() === ''; });
+    var net = val('net');
+    var gider = val('urun') + val('kargo') + val('kom') + val('amb') + val('iade') + val('diger');
+    var pay = net - gider - val('kar');
+    var basabas = net - gider;
+    var roas = pay > 0 ? net / pay : null;
+    var neg = pay < 0;
+    out.className = 'result' + (neg ? ' bad' : '');
+    var html = '<div class="big">' + fmt.format(pay) + ' TL</div>' +
+      '<p>Satış başına reklama kalan pay</p>' +
+      '<p>Hedef ROAS: <b>' + (roas ? fmt.format(Math.round(roas * 100) / 100) : '—') + '</b> · Başa baş reklam payı: <b>' + fmt.format(basabas) + ' TL</b></p>';
+    if (neg) html += '<p><b>Bu fiyatla reklam veremezsin.</b> Fiyatı artır ya da gideri düşür.</p>';
+    if (empty.length) html += '<p><b>Eksik gider olabilir, sonuç yanıltıcı olur.</b></p>';
+    out.innerHTML = html;
+  }
+  ids.forEach(function(k){ el[k].addEventListener('input', calc); });
+  calc();
+
+  // checklist (remembered on this device only)
+  var KEY = 'kilavuz-liste';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) {}
+  document.querySelectorAll('#liste input').forEach(function(cb){
+    var li = cb.closest('li');
+    cb.checked = !!saved[cb.id]; li.classList.toggle('on', cb.checked);
+    cb.addEventListener('change', function(){
+      li.classList.toggle('on', cb.checked); saved[cb.id] = cb.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch(e) {}
+    });
+  });
+})();
+</script>
+</body>
+</html>
